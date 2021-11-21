@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * @author gaoruan
+ */
 @Api(value = "商户平台-租户内自管理", tags = "商户平台-租户管理", description = "商户平台-租户账号角色相关的自管理")
 @RestController
 public class UserController {

@@ -32,6 +32,9 @@ import org.springframework.beans.factory.annotation.Value;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
+/**
+ * @author gaoruan
+ */
 @DubboService
 @Slf4j
 public class TransactionServiceImpl implements TransactionService {
@@ -105,6 +108,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
         alipayBean.setSubject(payOrderDTO.getSubject());
         alipayBean.setBody(payOrderDTO.getBody());
+        //设置超时时间为30分钟
         alipayBean.setExpireTime("30m");
 
         //支付渠道配置参数，从数据库查
@@ -125,14 +129,6 @@ public class TransactionServiceImpl implements TransactionService {
         return PayOrderConvert.INSTANCE.entity2dto(payOrder);
     }
 
-    /**
-     * 更新订单状态
-     *
-     * @param tradeNo           闪聚平台订单号
-     * @param payChannelTradeNo 支付宝或微信的交易流水号（第三方支付系统的订单号）
-     * @param state             订单状态、交易状态或支付状态：0-订单生产，1-支付中（目前未使用），2-支付成功，4-关闭，5-失败
-     * @throws BusinessException 自定义异常
-     */
     @Override
     public void updateOrderTradeNoAndTradeState(String tradeNo, String payChannelTradeNo, String state) throws BusinessException {
         LambdaUpdateWrapper<PayOrder> payOrderLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
@@ -146,7 +142,12 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
 
-    //保存订单（公用）
+    /**
+     * 将订单保存到数据库
+     * @param payOrderDTO 订单信息
+     * @return 保存的订单信息，主要获取订单号
+     * @throws BusinessException 自定义异常
+     */
     private PayOrderDTO save(PayOrderDTO payOrderDTO) throws BusinessException {
         PayOrder entity = PayOrderConvert.INSTANCE.dto2entity(payOrderDTO);
         //采用雪花片算法生成订单号
@@ -164,6 +165,13 @@ public class TransactionServiceImpl implements TransactionService {
         return PayOrderConvert.INSTANCE.entity2dto(entity);
     }
 
+    /**
+     * 校验App和门店是否属于该商户
+     * @param merchantId 商户id
+     * @param appId 应用Id
+     * @param storeId 门店Id
+     * @return 校验结果
+     */
     private Boolean verifyAppAndStore(Long merchantId, String appId, Long storeId){
         Boolean aBoolean = appService.queryAppInMerchant(appId, merchantId);
         if (!aBoolean){

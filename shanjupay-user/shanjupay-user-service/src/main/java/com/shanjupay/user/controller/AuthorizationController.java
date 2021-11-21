@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 
+/**
+ * @author gaoruan
+ */
 @Api(value = "统一账号-角色权限", tags = "统一账号-角色权限", description = "统一账号-角色权限")
 @RestController
 @Slf4j
@@ -31,6 +34,7 @@ public class AuthorizationController {
             @ApiImplicitParam(name = "username", value = "用户名",required = true, dataType = "String", paramType = "path"),
             @ApiImplicitParam(name = "tenantIds", value = "多个租户的id", required = true,allowMultiple = true, dataType = "Long", paramType = "query")
     })
+
     @GetMapping("/tenants/{username}/privileges")
     public Map<Long, AuthorizationInfoDTO> authorize(@PathVariable String username,@RequestParam Long[] tenantIds) {
         Map<Long, AuthorizationInfoDTO> authorize = authService.authorize(username, tenantIds);

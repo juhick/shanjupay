@@ -19,6 +19,7 @@ public interface SmsService {
      *  校验手机验证码
      * @param verifiyKey 验证码的key
      * @param verifiyCode 验证码
+     * @throws BusinessException 自定义异常
      */
     void checkVerifiyCode(String verifiyKey,String verifiyCode) throws BusinessException;
 }

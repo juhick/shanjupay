@@ -9,9 +9,11 @@ import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * @author gaoruan
+ */
 @Api(value = "商户平台-成员(员工)管理", tags = "商户平台-成员管理", description = "商户平台-员工的增删改查")
 @RestController
 public class StaffController {

@@ -29,17 +29,11 @@ public class AppServiceImpl implements AppService {
 
     @Autowired
     MerchantMapper merchantMapper;
-    /**
-     * 创建应用
-     *
-     * @param merchantId 商户id
-     * @param appDTO     应用信息
-     * @return 创建成功的应用信息
-     * @throws BusinessException
-     */
+
     @Override
     public AppDTO createApp(Long merchantId, AppDTO appDTO) throws BusinessException {
 
+        //查看参数是否为空
         if(merchantId==null || appDTO== null || StringUtils.isBlank(appDTO.getAppName())){
             throw new BusinessException(CommonErrorCode.E_300009);
         }
@@ -65,9 +59,12 @@ public class AppServiceImpl implements AppService {
         //2）生成应用ID
         String appId = UUID.randomUUID().toString();
 
+        //将dto转换为entity
         App entity = AppCovert.INSTANCE.dto2entity(appDTO);
-        entity.setAppId(appId);//应用id
-        entity.setMerchantId(merchantId);//商户id
+        //应用id
+        entity.setAppId(appId);
+        //商户id
+        entity.setMerchantId(merchantId);
 
         //调用 appMapper向app表插入数据
         appMapper.insert(entity);
@@ -75,39 +72,18 @@ public class AppServiceImpl implements AppService {
         return AppCovert.INSTANCE.entity2dto(entity);
     }
 
-    /**
-     * 根据商户id查询应用列表
-     *
-     * @param merchantId
-     * @return
-     * @throws BusinessException
-     */
     @Override
     public List<AppDTO> queryAppByMerchant(Long merchantId) throws BusinessException {
         List<App> apps = appMapper.selectList(new LambdaQueryWrapper<App>().eq(App::getMerchantId, merchantId));
         return AppCovert.INSTANCE.listentity2dto(apps);
     }
 
-    /**
-     * 根据应用id查询应用信息
-     *
-     * @param appId
-     * @return
-     * @throws BusinessException
-     */
     @Override
     public AppDTO getAppById(String appId) throws BusinessException {
         App app = appMapper.selectOne(new LambdaQueryWrapper<App>().eq(App::getAppId, appId));
         return AppCovert.INSTANCE.entity2dto(app);
     }
 
-    /**
-     * 校验应用是否属于商户
-     *
-     * @param appId
-     * @param merchantId
-     * @return true存在，false不存在
-     */
     @Override
     public Boolean queryAppInMerchant(String appId, Long merchantId) {
         Integer count = appMapper.selectCount(new LambdaQueryWrapper<App>().eq(App::getAppId, appId)
@@ -116,7 +92,11 @@ public class AppServiceImpl implements AppService {
         return count>0;
     }
 
-    //判断应用名称是否存在
+    /**
+     * 判断应用名称是否已经存在
+     * @param appName 应用名称
+     * @return 应用是否存在
+     */
     private Boolean isExistAppName(String appName){
         Integer count = appMapper.selectCount(new LambdaQueryWrapper<App>().eq(App::getAppName, appName));
         return count >0;

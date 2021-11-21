@@ -33,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.apache.dubbo.config.annotation.Reference;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +42,7 @@ import java.util.List;
 
 /**
  * Created by Administrator.
+ * @author gaoruan
  */
 @DubboService
 @Slf4j
@@ -63,34 +63,21 @@ public class MerchantServiceImpl implements MerchantService {
     @DubboReference
     TenantService tenantService;
 
+	@DubboReference
+	AuthorizationService authService;
+
     @Override
     public MerchantDTO queryMerchantById(Long id) {
         Merchant merchant = merchantMapper.selectById(id);
-//        MerchantDTO merchantDTO = new MerchantDTO();
-//        merchantDTO.setId(merchant.getId());
-//        merchantDTO.setMerchantName(merchant.getMerchantName());
-        //....
         return MerchantConvert.INSTANCE.entity2dto(merchant);
     }
 
-    /**
-     * 根据租户id查询商户的信息
-     *
-     * @param tenantId
-     * @return
-     */
     @Override
     public MerchantDTO queryMerchantByTenantId(Long tenantId) {
         Merchant merchant = merchantMapper.selectOne(new LambdaQueryWrapper<Merchant>().eq(Merchant::getTenantId, tenantId));
         return MerchantConvert.INSTANCE.entity2dto(merchant);
     }
 
-    /**
-     * 注册商户服务接口，接收账号、密码、手机号，为了可扩展性使用merchantDto接收数据
-     * 调用SaaS接口：新增租户、用户、绑定租户和用户的关系，初始化权限
-     * @param merchantDTO 商户注册信息
-     * @return 注册成功的商户信息
-     */
     @Override
     public MerchantDTO createMerchant(MerchantDTO merchantDTO) throws BusinessException {
         //校验参数的合法性
@@ -116,29 +103,18 @@ public class MerchantServiceImpl implements MerchantService {
 
         //调用SaaS接口
         //构建调用参数
-        /**
-         1、手机号
-
-         2、账号
-
-         3、密码
-
-         4、租户类型：shanju-merchant
-
-         5、默认套餐：shanju-merchant
-
-         6、租户名称，同账号名
-
-         */
         CreateTenantRequestDTO createTenantRequestDTO = new CreateTenantRequestDTO();
         createTenantRequestDTO.setMobile(merchantDTO.getMobile());
         createTenantRequestDTO.setUsername(merchantDTO.getUsername());
         createTenantRequestDTO.setPassword(merchantDTO.getPassword());
-        createTenantRequestDTO.setTenantTypeCode("shanju-merchant");//租户类型
-        createTenantRequestDTO.setBundleCode("shanju-merchant");//套餐，根据套餐进行分配权限
-        createTenantRequestDTO.setName(merchantDTO.getUsername());//租户名称，和账号名一样
+		//租户类型
+        createTenantRequestDTO.setTenantTypeCode("shanju-merchant");
+		//套餐，根据套餐进行分配权限
+        createTenantRequestDTO.setBundleCode("shanju-merchant");
+		//租户名称，和账号名一样
+        createTenantRequestDTO.setName(merchantDTO.getUsername());
 
-        //如果租户在SaaS已经存在，SaaS直接 返回此租户的信息，否则进行添加
+        //如果租户在SaaS已经存在，SaaS直接返回此租户的信息，否则进行添加
         TenantDTO tenantAndAccount = tenantService.createTenantAndAccount(createTenantRequestDTO);
         //获取租户的id
         if(tenantAndAccount == null || tenantAndAccount.getId() == null){
@@ -154,10 +130,6 @@ public class MerchantServiceImpl implements MerchantService {
             throw new BusinessException(CommonErrorCode.E_200017);
         }
 
-
-//        Merchant merchant = new Merchant();
-//        merchant.setMobile(merchantDTO.getMobile());
-        //..写入其它属性
         //使用MapStruct进行对象转换
         Merchant merchant = MerchantConvert.INSTANCE.dto2entity(merchantDTO);
         //设置所对应的租户的Id
@@ -170,34 +142,30 @@ public class MerchantServiceImpl implements MerchantService {
         //新增门店
         StoreDTO storeDTO = new StoreDTO();
         storeDTO.setStoreName("根门店");
-        storeDTO.setMerchantId(merchant.getId());//商户id
+		//商户id
+        storeDTO.setMerchantId(merchant.getId());
         StoreDTO store = createStore(storeDTO);
 
         //新增员工
         StaffDTO staffDTO = new StaffDTO();
-        staffDTO.setMobile(merchantDTO.getMobile());//手机号
-        staffDTO.setUsername(merchantDTO.getUsername());//账号
-        staffDTO.setStoreId(store.getId());//员所属门店id
-        staffDTO.setMerchantId(merchant.getId());//商户id
+		//手机号
+        staffDTO.setMobile(merchantDTO.getMobile());
+		//账号
+        staffDTO.setUsername(merchantDTO.getUsername());
+		//员所属门店id
+        staffDTO.setStoreId(store.getId());
+		//商户id
+        staffDTO.setMerchantId(merchant.getId());
 
         StaffDTO staff = createStaff(staffDTO);
 
         //为门店设置管理员
         bindStaffToStore(store.getId(),staff.getId());
 
-        //将dto中写入新增商户的id
-//        merchantDTO.setId(merchant.getId());
         //将entity转成dto
         return MerchantConvert.INSTANCE.entity2dto(merchant);
     }
 
-    /**
-     * 资质申请接口
-     *
-     * @param merchantId  商户id
-     * @param merchantDTO 资质申请的信息
-     * @throws BusinessException
-     */
     @Override
     @Transactional
     public void applyMerchant(Long merchantId, MerchantDTO merchantDTO) throws BusinessException {
@@ -213,20 +181,15 @@ public class MerchantServiceImpl implements MerchantService {
         Merchant entity = MerchantConvert.INSTANCE.dto2entity(merchantDTO);
         //将必要的参数设置到entity
         entity.setId(merchant.getId());
-        entity.setMobile(merchant.getMobile());//因为资质申请的时候手机号不让改，还使用数据库中原来的手机号
-        entity.setAuditStatus("1");//审核状态1-已申请待审核
+		//因为资质申请的时候手机号不让改，还使用数据库中原来的手机号
+        entity.setMobile(merchant.getMobile());
+		//审核状态1-已申请待审核
+        entity.setAuditStatus("1");
         entity.setTenantId(merchant.getTenantId());
         //调用mapper更新商户表
         merchantMapper.updateById(entity);
     }
 
-    /**
-     * 新增门店
-     *
-     * @param storeDTO 门店信息
-     * @return 新增成功的门店信息
-     * @throws BusinessException
-     */
     @Override
     public StoreDTO createStore(StoreDTO storeDTO) throws BusinessException {
         Store entity = StoreConvert.INSTANCE.dto2entity(storeDTO);
@@ -237,13 +200,6 @@ public class MerchantServiceImpl implements MerchantService {
         return StoreConvert.INSTANCE.entity2dto(entity);
     }
 
-    /**
-     * 新增员工
-     *
-     * @param staffDTO 员工信息
-     * @return 新增成功的员工信息
-     * @throws BusinessException
-     */
     @Override
     public StaffDTO createStaff(StaffDTO staffDTO) throws BusinessException {
 
@@ -272,13 +228,6 @@ public class MerchantServiceImpl implements MerchantService {
         return StaffConvert.INSTANCE.entity2dto(staff);
     }
 
-    /**
-     * 将员工设置为门店的管理员
-     *
-     * @param storeId
-     * @param staffId
-     * @throws BusinessException
-     */
     @Override
     public void bindStaffToStore(Long storeId, Long staffId) throws BusinessException {
         StoreStaff storeStaff = new StoreStaff();
@@ -287,14 +236,6 @@ public class MerchantServiceImpl implements MerchantService {
         storeStaffMapper.insert(storeStaff);
     }
 
-    /**
-     * 门店列表的查询
-     *
-     * @param storeDTO 查询条件，必要参数：商户id
-     * @param pageNo   页码
-     * @param pageSize 分页记录数
-     * @return
-     */
     @Override
     public PageVO<StoreDTO> queryStoreByPage(StoreDTO storeDTO, Integer pageNo, Integer pageSize) {
         //分页条件
@@ -319,13 +260,6 @@ public class MerchantServiceImpl implements MerchantService {
         return new PageVO(storeDTOS,storeIPage.getTotal(),pageNo,pageSize);
     }
 
-    /**
-     * 校验门店是否属于商户
-     *
-     * @param storeId
-     * @param merchantId
-     * @return true存在，false不存在
-     */
     @Override
     public Boolean queryStoreInMerchant(Long storeId, Long merchantId) {
 
@@ -389,9 +323,9 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	/**
-	 * 查询根门店
-	 * @param merchantId
-	 * @return
+	 * 获取根门店
+	 * @param merchantId 商户Id
+	 * @return 根门店Id
 	 */
 	private Long getRootStore(Long merchantId) {
 		Store store = storeMapper.selectOne(new QueryWrapper<Store>().lambda().eq(Store::getMerchantId, merchantId).isNull(Store::getParentId));
@@ -442,12 +376,8 @@ public class MerchantServiceImpl implements MerchantService {
 		return staffDTOS;
 	}
 
-	/**
-	 * 获取门店详情
-	 * @param id
-	 * @return
-	 */
-	public StoreDTO queryStoreById(Long id) {
+	@Override
+    public StoreDTO queryStoreById(Long id) {
 		Store store = storeMapper.selectById(id);
 		StoreDTO storeDTO = StoreConvert.INSTANCE.entity2dto(store);
 		if (storeDTO != null) {
@@ -458,9 +388,9 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	/**
-	 * 获取门店管理员列表
-	 * @param storeId
-	 * @return
+	 * 查询门店管理员
+	 * @param storeId 门店Id
+	 * @return 门店的管理员李彪
 	 */
 	List<StaffDTO> queryStoreAdmin(Long storeId) {
 		//根据门店获取管理员的id
@@ -529,9 +459,6 @@ public class MerchantServiceImpl implements MerchantService {
 		tenantService.checkCreateStaffAccountRole(tenantId, accountRequest, roleCodes);
 	}
 
-	@Reference
-	private AuthorizationService authService;
-
 	@Override
 	public StaffDTO queryStaffDetail(Long id, Long tenantId) {
 		StaffDTO staffDTO = queryStaffById(id);
@@ -551,9 +478,9 @@ public class MerchantServiceImpl implements MerchantService {
 	}
 
 	/**
-	 * 获取员工详情
-	 * @param id
-	 * @return
+	 * 根据Id查询员工
+	 * @param id 员工Id
+	 * @return 查询到的员工信息
 	 */
 	public StaffDTO queryStaffById(Long id) {
 		Staff staff = staffMapper.selectById(id);
@@ -594,29 +521,31 @@ public class MerchantServiceImpl implements MerchantService {
 		//删除员工对应的账号,账号-角色之间的关系
 		//获取商户的租户ID
 		Long tenantId = queryMerchantById(staff.getMerchantId()).getTenantId();
-		tenantService.unbindTenant(tenantId, staff.getUsername());//将某账号从租户内移除，租户管理员不可移除
+		//将某账号从租户内移除，租户管理员不可移除
+		tenantService.unbindTenant(tenantId, staff.getUsername());
 
 		//删除员工
 		staffMapper.deleteById(staff);
 	}
 
-    /**
-     * 员工手机号在同一个商户下是唯一校验
-     * @param mobile
-     * @param merchantId
-     * @return
-     */
+	/**
+	 * 查询手机号是否已被注册
+	 * @param mobile 手机号
+	 * @param merchantId 商户Id
+	 * @return 是否存在
+	 */
     Boolean isExistStaffByMobile(String mobile,Long merchantId){
         Integer count = staffMapper.selectCount(new LambdaQueryWrapper<Staff>().eq(Staff::getMobile, mobile)
                 .eq(Staff::getMerchantId, merchantId));
         return count>0;
     }
-    /**
-     * 员工账号在同一个商户下是唯一校验
-     * @param username
-     * @param merchantId
-     * @return
-     */
+
+	/**
+	 * 查询用户名是否已被注册
+	 * @param username 用户名
+	 * @param merchantId 商户Id
+	 * @return 是否存在
+	 */
     Boolean isExistStaffByUserName(String username,Long merchantId){
         Integer count = staffMapper.selectCount(new LambdaQueryWrapper<Staff>().eq(Staff::getUsername,username)
                 .eq(Staff::getMerchantId, merchantId));

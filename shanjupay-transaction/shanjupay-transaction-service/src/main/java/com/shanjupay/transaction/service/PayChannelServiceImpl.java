@@ -24,6 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
+/**
+ * @author gaoruan
+ */
 @DubboService
 public class PayChannelServiceImpl implements PayChannelService {
 
@@ -59,8 +62,11 @@ public class PayChannelServiceImpl implements PayChannelService {
         if (appPlatformChannel == null){
             //向app_platform_channel表插入记录
             AppPlatformChannel entity = new AppPlatformChannel();
-            entity.setAppId(appId); //应用Id
-            entity.setPlatformChannel(platformChannelCodes); //服务类型Code
+            //应用Id
+            entity.setAppId(appId);
+            //服务类型Code
+            entity.setPlatformChannel(platformChannelCodes);
+            //插入数据库
             appPlatformChannelMapper.insert(entity);
         }
 
@@ -98,8 +104,10 @@ public class PayChannelServiceImpl implements PayChannelService {
         PayChannelParam entity = payChannelParamMapper.selectOne(new LambdaQueryWrapper<PayChannelParam>().eq(PayChannelParam::getAppPlatformChannelId, appPlatformChannelId).eq(PayChannelParam::getPayChannel, payChannelParamDTO.getPayChannel()));
         //如果存在配置则更新
         if (entity != null){
-            entity.setChannelName(payChannelParamDTO.getChannelName());//配置名称
-            entity.setParam(payChannelParamDTO.getParam());//json格式的配置参数
+            //配置名称
+            entity.setChannelName(payChannelParamDTO.getChannelName());
+            //json格式的配置参数
+            entity.setParam(payChannelParamDTO.getParam());
             payChannelParamMapper.updateById(entity);
         } else {
             //否则添加配置
@@ -139,7 +147,7 @@ public class PayChannelServiceImpl implements PayChannelService {
     @Override
     public List<PayChannelParamDTO> queryPayChannelParamByAppAndPlatform(String appId, String platformChannel) throws BusinessException {
 
-        //TODO 先从redis查询，若查询到则直接返回，否则从数据库查询，从数据库查询完毕后再保存到redis
+        //先从redis查询，若查询到则直接返回，否则从数据库查询，从数据库查询完毕后再保存到redis
         String redisKey = RedisUtil.keyBuilder(appId, platformChannel);
         Boolean exists = cache.exists(redisKey);
         if (exists){
@@ -175,6 +183,12 @@ public class PayChannelServiceImpl implements PayChannelService {
         return null;
     }
 
+    /**
+     * 查询应用和服务类型的绑定Id
+     * @param appId 应用Id
+     * @param platformChannelCode 服务类型代码
+     * @return 查询到的绑定Id
+     */
     private Long selectIdByAppPlatformChannel(String appId, String platformChannelCode){
         AppPlatformChannel appPlatformChannel = appPlatformChannelMapper.selectOne(new LambdaQueryWrapper<AppPlatformChannel>().eq(AppPlatformChannel::getAppId, appId).eq(AppPlatformChannel::getPlatformChannel, platformChannelCode));
         if (appPlatformChannel != null){

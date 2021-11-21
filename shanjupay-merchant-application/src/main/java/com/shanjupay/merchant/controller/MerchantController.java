@@ -30,10 +30,10 @@ import java.util.UUID;
 @Api(value="商户平台应用接口",tags = "商户平台应用接口",description = "商户平台应用接口")
 public class MerchantController {
 
-    @DubboReference  //注入的远程调用的接口
+    @DubboReference
     MerchantService merchantService;
 
-    @Autowired //注入本地的bean
+    @Autowired
     SmsService smsService;
 
     @Autowired
@@ -82,18 +82,12 @@ public class MerchantController {
         //校验验证码
         smsService.checkVerifiyCode(merchantRegisterVO.getVerifiykey(),merchantRegisterVO.getVerifiyCode());
         //调用dubbo服务接口
-//        MerchantDTO merchantDTO = new MerchantDTO();
-        //向dto写入商户注册的信息
-//        merchantDTO.setMobile(merchantRegisterVO.getMobile());
-//        merchantDTO.setUsername(merchantRegisterVO.getUsername());
-        //...
         //使用MapStruct转换对象
         MerchantDTO merchantDTO = MerchantRegisterConvert.INSTANCE.vo2dto(merchantRegisterVO);
         merchantService.createMerchant(merchantDTO);
         return merchantRegisterVO;
     }
 
-    //上传证件照
     @ApiOperation("上传证件照")
     @PostMapping("/upload")
     public String upload(@ApiParam(value = "证件照",required = true) @RequestParam("file") MultipartFile multipartFile) throws IOException {

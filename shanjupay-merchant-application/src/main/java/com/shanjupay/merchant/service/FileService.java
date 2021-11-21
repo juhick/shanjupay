@@ -13,7 +13,7 @@ public interface FileService {
      * @param bytes 文件字节数组
      * @param fileName 文件名
      * @return  文件访问路径（绝对的url）
-     * @throws BusinessException
+     * @throws BusinessException 自定义异常
      */
-    public String upload(byte[] bytes,String fileName) throws BusinessException;
+    String upload(byte[] bytes,String fileName) throws BusinessException;
 }
