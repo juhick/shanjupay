@@ -9,8 +9,6 @@ import org.springframework.stereotype.Repository;
  *  Mapper 接口
  * </p>
  *
- * @author author
- * @since 2019-12-01
  */
 @Repository
 public interface AppMapper extends BaseMapper<App> {

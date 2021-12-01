@@ -12,7 +12,6 @@ import org.springframework.stereotype.Repository;
  * </p>
  *
  *
- * @since 2019-08-13
  */
 @Repository
 public interface BundleMapper extends BaseMapper<Bundle> {

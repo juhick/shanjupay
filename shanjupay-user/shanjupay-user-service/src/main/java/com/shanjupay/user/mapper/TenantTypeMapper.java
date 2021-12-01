@@ -9,8 +9,6 @@ import org.springframework.stereotype.Repository;
  *  Mapper 接口
  * </p>
  *
- *
- * @since 2019-07-15
  */
 @Repository
 public interface TenantTypeMapper extends BaseMapper<TenantType> {

@@ -14,7 +14,6 @@ import java.util.List;
  * </p>
  *
  *
- * @since 2019-08-13
  */
 @Repository
 public interface AuthorizationPrivilegeGroupMapper extends BaseMapper<AuthorizationPrivilegeGroup> {

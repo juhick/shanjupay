@@ -13,8 +13,6 @@ import java.io.Serializable;
  * 
  * </p>
  *
- *
- * @since 2019-08-13
  */
 @Data
 @TableName("bundle")

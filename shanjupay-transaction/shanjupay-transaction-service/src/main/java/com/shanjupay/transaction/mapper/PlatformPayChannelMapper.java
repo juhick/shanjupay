@@ -14,7 +14,6 @@ import java.util.List;
  * </p>
  *
  * @author author
- * @since 2019-11-15
  */
 @Repository
 public interface PlatformPayChannelMapper extends BaseMapper<PlatformPayChannel> {

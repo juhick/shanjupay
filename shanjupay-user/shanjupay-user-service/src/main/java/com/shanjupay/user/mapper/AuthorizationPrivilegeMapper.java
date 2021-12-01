@@ -18,7 +18,6 @@ import java.util.Map;
  * </p>
  *
  *
- * @since 2019-08-13
  */
 @Repository
 public interface AuthorizationPrivilegeMapper extends BaseMapper<AuthorizationPrivilege> {

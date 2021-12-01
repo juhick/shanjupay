@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
  * </p>
  *
  * @author
- * @since 2019-07-15
  */
 @Configuration
 @MapperScan("com.shanjupay.**.mapper")

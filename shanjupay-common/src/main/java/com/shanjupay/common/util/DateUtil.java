@@ -11,8 +11,7 @@ import java.util.*;
 
 /**
  * 日期处理
- * 
- * @author alexgaoyh
+ *
  *
  */
 public class DateUtil {

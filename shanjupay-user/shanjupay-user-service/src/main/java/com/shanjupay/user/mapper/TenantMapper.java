@@ -19,8 +19,6 @@ import java.util.List;
  *  Mapper 接口
  * </p>
  *
- *
- * @since 2019-07-15
  */
 @Repository
 public interface TenantMapper extends BaseMapper<Tenant> {

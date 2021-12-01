@@ -16,7 +16,6 @@ import java.util.List;
  * </p>
  *
  *
- * @since 2019-08-13
  */
 @Repository
 public interface AccountRoleMapper extends BaseMapper<AccountRole> {

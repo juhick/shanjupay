@@ -8,7 +8,6 @@ import java.util.Random;
 /**
  * 随机字符串工具
  *
- * @author scq
  *
  */
 public class RandomStringUtil {

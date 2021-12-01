@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
  * </p>
  *
  * @author author
- * @since 2019-11-15
  */
 @Repository
 public interface PayChannelMapper extends BaseMapper<PayChannel> {

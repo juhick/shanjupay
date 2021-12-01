@@ -13,8 +13,6 @@ import java.io.Serializable;
  * 角色信息
  * </p>
  *
- *
- * @since 2019-08-13
  */
 @Data
 @TableName("authorization_role")

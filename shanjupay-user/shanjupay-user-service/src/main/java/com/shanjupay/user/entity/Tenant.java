@@ -14,7 +14,6 @@ import java.io.Serializable;
  * </p>
  *
  *
- * @since 2019-07-15
  */
 @Data
 @TableName("tenant")
